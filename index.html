@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eskari · Escrow and settlement between agents</title>
+  <meta name="description" content="When one company's agent buys from another's, neither side should have to go first. Eskari holds both legs of the deal and settles them atomically on Canton." />
+  <meta name="theme-color" content="#08090a" />
+  <meta name="color-scheme" content="dark" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Eskari" />
+  <meta property="og:title" content="Eskari · Agents make the deal. Eskari makes it final." />
+  <meta property="og:description" content="Escrow and settlement between agents. Both legs are held, then settled in one atomic transaction. The asset moves only if the payment does." />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Eskari · Agents make the deal. Eskari makes it final." />
+  <meta name="twitter:description" content="Escrow and settlement between agents. The asset moves only if the payment does." />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Icon sprite -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="mark" viewBox="0 0 32 32"><path d="M4 14.8a10 10 0 0 1 20 0Z"/><path d="M8 17.2a10 10 0 0 0 20 0Z"/></symbol>
+      <symbol id="i-inbox" viewBox="0 0 16 16"><path d="M2.5 9.5 4 3.5h8l1.5 6v3h-11v-3Z"/><path d="M2.5 9.5h3l.8 1.5h3.4l.8-1.5h3"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></symbol>
+      <symbol id="i-swap" viewBox="0 0 16 16"><path d="M3 5.5h9.5M10 3l2.5 2.5L10 8"/><path d="M13 10.5H3.5M6 8l-2.5 2.5L6 13"/></symbol>
+      <symbol id="i-users" viewBox="0 0 16 16"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.2 2-3.4 4-3.4s3.600 1.200 4 3.400"/><path d="M10.5 3.600a2.200 2.200 0 0 1 0 3.900M12 10c1.100.5 1.800 1.500 2 3"/></symbol>
+      <symbol id="i-agent" viewBox="0 0 16 16"><rect x="3" y="5" width="10" height="7.5" rx="2"/><path d="M8 5V2.800M6 8.250v1M10 8.250v1"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 16 16"><path d="M8 2 13 4v4c0 3-2.100 5-5 6-2.900-1-5-3-5-6V4l5-2Z"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 16 16"><path d="M1.800 8S4 3.800 8 3.800 14.200 8 14.200 8 12 12.200 8 12.200 1.800 8 1.800 8Z"/><circle cx="8" cy="8" r="1.800"/></symbol>
+      <symbol id="i-eye-off" viewBox="0 0 16 16"><path d="M3.400 5.600C2.300 6.700 1.800 8 1.800 8S4 12.200 8 12.200c1 0 1.900-.25 2.700-.65M6.200 4.050A6 6 0 0 1 8 3.800c4 0 6.200 4.200 6.200 4.200s-.5 1-1.500 2.050M2.500 2.500l11 11"/></symbol>
+      <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4"/><path d="m10 10 3.200 3.200"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.500v9M3.500 8h9"/></symbol>
+      <symbol id="i-chev" viewBox="0 0 16 16"><path d="m4.500 6.500 3.500 3.500 3.500-3.500"/></symbol>
+      <symbol id="i-dots" viewBox="0 0 16 16"><circle cx="3.500" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="12.500" cy="8" r="1" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-up" viewBox="0 0 16 16"><path d="M8 12.500v-9M4.500 7 8 3.500 11.500 7"/></symbol>
+      <symbol id="i-down" viewBox="0 0 16 16"><path d="M8 3.500v9M4.500 9 8 12.500 11.500 9"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9.500 4.500 13 8l-3.500 3.500"/></symbol>
+      <symbol id="i-check" viewBox="0 0 16 16"><path d="m3.500 8.500 3 3 6-7"/></symbol>
+      <symbol id="i-x" viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8"/></symbol>
+      <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 2.500h5l3 3v8H4v-11Z"/><path d="M9 2.500v3h3"/></symbol>
+      <symbol id="i-coin" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.500"/><circle cx="8" cy="8" r="2.250"/></symbol>
+      <symbol id="i-cube" viewBox="0 0 16 16"><path d="M8 2 13.500 5v6L8 14 2.500 11V5L8 2Z"/><path d="M2.500 5 8 8l5.500-3M8 8v6"/></symbol>
+      <symbol id="i-replay" viewBox="0 0 16 16"><path d="M3 8a5 5 0 1 0 1.600-3.700"/><path d="M3 2.600v2.900h2.900"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.500"/><path d="M8 5v3.200l2 1.300"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 16 16"><path d="M9 1.800 3.500 9H8l-1 5.200L12.500 7H8l1-5.200Z"/></symbol>
+      <symbol id="i-pen" viewBox="0 0 16 16"><path d="M3 13l.6-2.800L10.800 3l2.200 2.200-7.200 7.200L3 13Z"/></symbol>
+      <symbol id="i-min" viewBox="0 0 16 16"><path d="M4 11.500h8"/></symbol>
+      <symbol id="i-expand" viewBox="0 0 16 16"><path d="M9.500 3H13v3.500M13 3 9 7M6.500 13H3V9.500M3 13l4-4"/></symbol>
+      <symbol id="i-star" viewBox="0 0 16 16"><path d="m8 2 1.800 3.800 4.200.5-3.100 2.900.8 4.100L8 11.300l-3.700 2 .8-4.100L2 6.300l4.200-.5L8 2Z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="st-await" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.500" fill="none" stroke="#8a8f98" stroke-width="1.500" stroke-dasharray="1.600 1.860"/></symbol>
+      <symbol id="st-locked" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.500" fill="none" stroke="#f2c94c" stroke-width="1.500"/><path d="M7 4a3 3 0 0 1 0 6Z" fill="#f2c94c"/></symbol>
+      <symbol id="st-verify" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.500" fill="none" stroke="#f2c94c" stroke-width="1.500"/><path d="M7 4a3 3 0 1 1-3 3h3Z" fill="#f2c94c"/></symbol>
+      <symbol id="st-settled" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.250" fill="#4cb782"/><path d="m4.200 7.200 1.900 1.900 3.700-4.100" fill="none" stroke="#08090a" stroke-width="1.600" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="st-unwound" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.250" fill="#eb5757"/><path d="M4.800 4.800l4.400 4.400M9.200 4.800 4.800 9.200" fill="none" stroke="#08090a" stroke-width="1.600" stroke-linecap="round"/></symbol>
+    </defs>
+  </svg>
+
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a href="#top" class="logo" aria-label="Eskari home">
+        <svg class="logo-mark" width="24" height="24" aria-hidden="true"><use href="#mark"/></svg>
+        <span>Eskari</span>
+      </a>
+      <nav class="nav-links" id="navLinks" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#product">Product</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#developers">Developers</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-right">
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a href="#access" class="btn btn-light btn-sm">Request access</a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="wrap">
+      <h1>
+        <span>Agents make <br class="br-m" />the deal.</span>
+        <span>Eskari makes <br class="br-m" />it final.</span>
+      </h1>
+      <div class="hero-row">
+        <p class="hero-sub">Escrow and settlement between agents. Eskari holds both legs of a deal and settles them atomically. The asset moves only if the payment does.</p>
+        <div class="hero-actions">
+          <a href="#access" class="btn btn-light">Request access</a>
+          <a href="#how" class="link-arrow">See a deal settle <svg width="16" height="16" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="app" role="img" aria-label="The Eskari console showing escrow ESC-2047: 2,000 GPU-hours for 25,000 USDC between two agents, with both legs released in a single transaction.">
+        <!-- sidebar -->
+        <aside class="app-side">
+          <div class="side-top">
+            <span class="ws"><svg class="logo-mark" width="16" height="16"><use href="#mark"/></svg>Acme Robotics<svg class="ic ic-s" width="14" height="14"><use href="#i-chev"/></svg></span>
+            <span class="side-btns"><svg class="ic" width="16" height="16"><use href="#i-search"/></svg><span class="round"><svg class="ic" width="14" height="14"><use href="#i-pen"/></svg></span></span>
+          </div>
+          <ul class="side-list">
+            <li><svg class="ic" width="16" height="16"><use href="#i-inbox"/></svg>Inbox<span class="count">2</span></li>
+            <li><svg class="ic" width="16" height="16"><use href="#i-lock"/></svg>Escrows</li>
+            <li><svg class="ic" width="16" height="16"><use href="#i-swap"/></svg>Settlements</li>
+            <li><svg class="ic" width="16" height="16"><use href="#i-users"/></svg>Counterparties</li>
+          </ul>
+          <div class="side-h">Workspace <span>▾</span></div>
+          <ul class="side-list">
+            <li><svg class="ic" width="16" height="16"><use href="#i-agent"/></svg>Agents</li>
+            <li><svg class="ic" width="16" height="16"><use href="#i-shield"/></svg>Policies</li>
+            <li><svg class="ic" width="16" height="16"><use href="#i-eye"/></svg>Observers</li>
+          </ul>
+          <div class="side-h">Pinned <span>▾</span></div>
+          <ul class="side-list">
+            <li class="on"><svg width="14" height="14"><use href="#st-settled"/></svg>GPU-hours for USDC</li>
+            <li><svg width="14" height="14"><use href="#st-locked"/></svg>Market data licence</li>
+            <li><svg width="14" height="14"><use href="#st-locked"/></svg>Invoice INV-0118</li>
+            <li><svg width="14" height="14"><use href="#st-unwound"/></svg>Inference credits</li>
+          </ul>
+        </aside>
+
+        <!-- main -->
+        <div class="app-main">
+          <div class="app-bar">
+            <span class="app-bar-l">
+              <svg width="14" height="14"><use href="#st-settled"/></svg>
+              <span class="mono id">ESC-2047</span>
+              <span class="app-bar-title">GPU-hours for USDC</span>
+              <svg class="ic star" width="14" height="14"><use href="#i-star"/></svg>
+              <svg class="ic" width="16" height="16"><use href="#i-dots"/></svg>
+            </span>
+            <span class="app-bar-r">
+              <span class="pager">3 <i>/ 12</i></span>
+              <svg class="ic" width="16" height="16"><use href="#i-up"/></svg>
+              <svg class="ic" width="16" height="16"><use href="#i-down"/></svg>
+            </span>
+          </div>
+
+          <div class="app-body">
+            <div class="app-doc">
+              <div class="doc-title">2,000 GPU-hours for 25,000 USDC</div>
+              <p class="doc-desc">procure-01 buys compute from broker-07. Settles when <code>capacity.attested</code> is true, or unwinds at 14:32 UTC.</p>
+
+              <div class="legs">
+                <div class="leg">
+                  <span class="leg-ic"><svg class="ic" width="16" height="16"><use href="#i-coin"/></svg></span>
+                  <span class="leg-main"><b>Payment leg</b><span>procure-01 → broker-07</span></span>
+                  <span class="leg-amt">25,000.00 <i>USDC</i></span>
+                  <span class="tag tag-green"><svg width="12" height="12"><use href="#st-settled"/></svg>Released</span>
+                </div>
+                <div class="leg">
+                  <span class="leg-ic"><svg class="ic" width="16" height="16"><use href="#i-cube"/></svg></span>
+                  <span class="leg-main"><b>Asset leg</b><span>broker-07 → procure-01</span></span>
+                  <span class="leg-amt">2,000 <i>GPU-hours</i></span>
+                  <span class="tag tag-green"><svg width="12" height="12"><use href="#st-settled"/></svg>Released</span>
+                </div>
+              </div>
+
+              <div class="doc-h">Activity</div>
+              <ul class="activity">
+                <li><svg class="ic" width="14" height="14"><use href="#i-agent"/></svg><span><b>procure-01</b> opened the escrow with <b>broker-07</b></span><time>14:17:02</time></li>
+                <li><svg class="ic" width="14" height="14"><use href="#i-pen"/></svg><span>Both agents signed terms <code>a41f…c9e2</code></span><time>14:17:03</time></li>
+                <li><svg width="14" height="14"><use href="#st-locked"/></svg><span><b>Payment leg</b> locked 25,000.00 USDC</span><time>14:17:05</time></li>
+                <li><svg width="14" height="14"><use href="#st-locked"/></svg><span><b>Asset leg</b> locked 2,000 GPU-hours</span><time>14:17:06</time></li>
+                <li><svg width="14" height="14"><use href="#st-verify"/></svg><span>Condition met <code>capacity.attested</code></span><time>14:17:41</time></li>
+                <li class="hl"><svg width="14" height="14"><use href="#st-settled"/></svg><span><b>Settled</b> both legs in one transaction</span><time>14:17:41</time></li>
+              </ul>
+            </div>
+
+            <div class="app-props">
+              <div class="prop-h">Properties</div>
+              <dl>
+                <div><dt>Status</dt><dd><svg width="14" height="14"><use href="#st-settled"/></svg>Settled</dd></div>
+                <div><dt>Deadline</dt><dd><svg class="ic" width="14" height="14"><use href="#i-clock"/></svg>14:32 UTC</dd></div>
+                <div><dt>Visible to</dt><dd><svg class="ic" width="14" height="14"><use href="#i-eye"/></svg>2 parties</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- floating agent panel -->
+        <div class="agent">
+          <div class="agent-bar">
+            <span class="agent-name"><i class="av av-a">P</i>procure-01<span class="pill-tag">Agent</span></span>
+            <span class="agent-win"><svg class="ic" width="16" height="16"><use href="#i-min"/></svg><svg class="ic" width="16" height="16"><use href="#i-expand"/></svg><svg class="ic" width="16" height="16"><use href="#i-x"/></svg></span>
+          </div>
+          <div class="agent-body">
+            <p class="bubble">Buy 2,000 GPU-hours this week. Stay under $13 an hour.</p>
+            <p class="ctx"><svg class="ic" width="14" height="14"><use href="#i-shield"/></svg><b>compute-spend</b> policy added to context</p>
+            <p class="worked">Worked for 39 sec <span>▸</span></p>
+            <p class="reply">Agreed $12.50 an hour with broker-07 at Northfield Compute. Opened an escrow and locked 25,000 USDC. Their capacity was attested, so both legs settled together.</p>
+            <div class="agent-card">
+              <span class="agent-card-t"><svg width="14" height="14"><use href="#st-settled"/></svg><b>Settled</b> GPU-hours for USDC</span>
+              <span class="mono">ESC-2047 · 2 legs · 1 transaction</span>
+            </div>
+          </div>
+          <div class="agent-input"><span>Reply…</span><span class="round"><svg class="ic" width="14" height="14"><use href="#i-up"/></svg></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="section statement" id="problem">
+    <div class="wrap">
+      <p class="eyebrow">The who-goes-first problem</p>
+      <h2 class="statement-text"><span>Someone always has to go first.</span> When one company's agent buys from another's, one side pays and hopes, or delivers and hopes. Agents can negotiate in seconds. They still can't trust each other.</h2>
+
+      <div class="figs">
+        <figure class="fig">
+          <span class="fig-label">FIG 0.1</span>
+          <svg viewBox="-204 52 408 178" fill="none" aria-hidden="true"><path class="l3" d="M-200.9 129.2L-114.3 179.2L-114.3 185.2L-200.9 135.2Z"/><path class="l3" d="M-27.7 129.2L-114.3 179.2L-114.3 185.2L-27.7 135.2Z"/><path class="l3" d="M-114.3 79.2L-27.7 129.2L-114.3 179.2L-200.9 129.2Z"/><path class="l2" d="M-200.9 119.6L-114.3 169.6L-114.3 175.6L-200.9 125.6Z"/><path class="l2" d="M-27.7 119.6L-114.3 169.6L-114.3 175.6L-27.7 125.6Z"/><path class="l2" d="M-114.3 69.6L-27.7 119.6L-114.3 169.6L-200.9 119.6Z"/><path class="l" d="M-200.9 110L-114.3 160L-114.3 166L-200.9 116Z"/><path class="l" d="M-27.7 110L-114.3 160L-114.3 166L-27.7 116Z"/><path class="l" d="M-114.3 60L-27.7 110L-114.3 160L-200.9 110Z"/><path class="l3" d="M27.7 129.2L114.3 179.2L114.3 185.2L27.7 135.2Z"/><path class="l3" d="M200.9 129.2L114.3 179.2L114.3 185.2L200.9 135.2Z"/><path class="l3" d="M114.3 79.2L200.9 129.2L114.3 179.2L27.7 129.2Z"/><path class="l2" d="M27.7 119.6L114.3 169.6L114.3 175.6L27.7 125.6Z"/><path class="l2" d="M200.9 119.6L114.3 169.6L114.3 175.6L200.9 125.6Z"/><path class="l2" d="M114.3 69.6L200.9 119.6L114.3 169.6L27.7 119.6Z"/><path class="l" d="M27.7 110L114.3 160L114.3 166L27.7 116Z"/><path class="l" d="M200.9 110L114.3 160L114.3 166L200.9 116Z"/><path class="l" d="M114.3 60L200.9 110L114.3 160L27.7 110Z"/><ellipse class="g" cx="-76.2" cy="110" rx="20.8" ry="12"/><ellipse class="g" cx="-76.2" cy="80" rx="20.8" ry="12"/><path class="g" d="M-97 80L-97 110M-55.4 80L-55.4 110"/><path class="l" d="M46.8 76L76.2 93L76.2 127L46.8 110Z"/><path class="l" d="M105.7 76L76.2 93L76.2 127L105.7 110Z"/><path class="l" d="M76.2 59L105.7 76L76.2 93L46.8 76Z"/><path class="l" d="M131.6 104L131.6 110A20.8 12 0 0 0 173.2 110L173.2 104Z"/><ellipse class="l" cx="152.4" cy="104" rx="20.8" ry="12"/><path class="l" d="M131.6 98L131.6 104A20.8 12 0 0 0 173.2 104L173.2 98Z"/><ellipse class="l" cx="152.4" cy="98" rx="20.8" ry="12"/><path class="l" d="M131.6 92L131.6 98A20.8 12 0 0 0 173.2 98L173.2 92Z"/><ellipse class="l" cx="152.4" cy="92" rx="20.8" ry="12"/><path class="l" d="M131.6 86L131.6 92A20.8 12 0 0 0 173.2 92L173.2 86Z"/><ellipse class="l" cx="152.4" cy="86" rx="20.8" ry="12"/><path class="l" d="M131.6 80L131.6 86A20.8 12 0 0 0 173.2 86L173.2 80Z"/><ellipse class="l" cx="152.4" cy="80" rx="20.8" ry="12"/><path class="a" d="M-15.6 110L15.6 110"/><path class="a ah" d="M5.8 113.1L15.6 110L5.8 106.9"/></svg>
+          <figcaption>
+            <h3>Pay first and hope</h3>
+            <p>The buyer's agent sends the money, then waits for a delivery it has no way to enforce.</p>
+          </figcaption>
+        </figure>
+        <figure class="fig">
+          <span class="fig-label">FIG 0.2</span>
+          <svg viewBox="-204 52 408 178" fill="none" aria-hidden="true"><path class="l3" d="M-200.9 129.2L-114.3 179.2L-114.3 185.2L-200.9 135.2Z"/><path class="l3" d="M-27.7 129.2L-114.3 179.2L-114.3 185.2L-27.7 135.2Z"/><path class="l3" d="M-114.3 79.2L-27.7 129.2L-114.3 179.2L-200.9 129.2Z"/><path class="l2" d="M-200.9 119.6L-114.3 169.6L-114.3 175.6L-200.9 125.6Z"/><path class="l2" d="M-27.7 119.6L-114.3 169.6L-114.3 175.6L-27.7 125.6Z"/><path class="l2" d="M-114.3 69.6L-27.7 119.6L-114.3 169.6L-200.9 119.6Z"/><path class="l" d="M-200.9 110L-114.3 160L-114.3 166L-200.9 116Z"/><path class="l" d="M-27.7 110L-114.3 160L-114.3 166L-27.7 116Z"/><path class="l" d="M-114.3 60L-27.7 110L-114.3 160L-200.9 110Z"/><path class="l3" d="M27.7 129.2L114.3 179.2L114.3 185.2L27.7 135.2Z"/><path class="l3" d="M200.9 129.2L114.3 179.2L114.3 185.2L200.9 135.2Z"/><path class="l3" d="M114.3 79.2L200.9 129.2L114.3 179.2L27.7 129.2Z"/><path class="l2" d="M27.7 119.6L114.3 169.6L114.3 175.6L27.7 125.6Z"/><path class="l2" d="M200.9 119.6L114.3 169.6L114.3 175.6L200.9 125.6Z"/><path class="l2" d="M114.3 69.6L200.9 119.6L114.3 169.6L27.7 119.6Z"/><path class="l" d="M27.7 110L114.3 160L114.3 166L27.7 116Z"/><path class="l" d="M200.9 110L114.3 160L114.3 166L200.9 116Z"/><path class="l" d="M114.3 60L200.9 110L114.3 160L27.7 110Z"/><path class="l" d="M-181.9 76L-152.4 93L-152.4 127L-181.9 110Z"/><path class="l" d="M-123 76L-152.4 93L-152.4 127L-123 110Z"/><path class="l" d="M-152.4 59L-123 76L-152.4 93L-181.9 76Z"/><path class="l" d="M-97 104L-97 110A20.8 12 0 0 0 -55.4 110L-55.4 104Z"/><ellipse class="l" cx="-76.2" cy="104" rx="20.8" ry="12"/><path class="l" d="M-97 98L-97 104A20.8 12 0 0 0 -55.4 104L-55.4 98Z"/><ellipse class="l" cx="-76.2" cy="98" rx="20.8" ry="12"/><path class="l" d="M-97 92L-97 98A20.8 12 0 0 0 -55.4 98L-55.4 92Z"/><ellipse class="l" cx="-76.2" cy="92" rx="20.8" ry="12"/><path class="l" d="M-97 86L-97 92A20.8 12 0 0 0 -55.4 92L-55.4 86Z"/><ellipse class="l" cx="-76.2" cy="86" rx="20.8" ry="12"/><path class="l" d="M-97 80L-97 86A20.8 12 0 0 0 -55.4 86L-55.4 80Z"/><ellipse class="l" cx="-76.2" cy="80" rx="20.8" ry="12"/><path class="g" d="M76.2 93L105.7 110L76.2 127L46.8 110Z"/><path class="g" d="M76.2 59L105.7 76L76.2 93L46.8 76Z"/><path class="g" d="M76.2 93L76.2 59"/><path class="g" d="M105.7 110L105.7 76"/><path class="g" d="M76.2 127L76.2 93"/><path class="g" d="M46.8 110L46.8 76"/><path class="a" d="M15.6 110L-15.6 110"/><path class="a ah" d="M-5.8 106.9L-15.6 110L-5.8 113.1"/></svg>
+          <figcaption>
+            <h3>Deliver first and hope</h3>
+            <p>The seller's agent hands over the asset, then waits for a payment that may never arrive.</p>
+          </figcaption>
+        </figure>
+        <figure class="fig">
+          <span class="fig-label">FIG 0.3</span>
+          <svg viewBox="-204 52 408 178" fill="none" aria-hidden="true"><path class="l3" d="M-200.9 129.2L-114.3 179.2L-114.3 185.2L-200.9 135.2Z"/><path class="l3" d="M-27.7 129.2L-114.3 179.2L-114.3 185.2L-27.7 135.2Z"/><path class="l3" d="M-114.3 79.2L-27.7 129.2L-114.3 179.2L-200.9 129.2Z"/><path class="l2" d="M-200.9 119.6L-114.3 169.6L-114.3 175.6L-200.9 125.6Z"/><path class="l2" d="M-27.7 119.6L-114.3 169.6L-114.3 175.6L-27.7 125.6Z"/><path class="l2" d="M-114.3 69.6L-27.7 119.6L-114.3 169.6L-200.9 119.6Z"/><path class="l" d="M-200.9 110L-114.3 160L-114.3 166L-200.9 116Z"/><path class="l" d="M-27.7 110L-114.3 160L-114.3 166L-27.7 116Z"/><path class="l" d="M-114.3 60L-27.7 110L-114.3 160L-200.9 110Z"/><path class="l3" d="M27.7 129.2L114.3 179.2L114.3 185.2L27.7 135.2Z"/><path class="l3" d="M200.9 129.2L114.3 179.2L114.3 185.2L200.9 135.2Z"/><path class="l3" d="M114.3 79.2L200.9 129.2L114.3 179.2L27.7 129.2Z"/><path class="l2" d="M27.7 119.6L114.3 169.6L114.3 175.6L27.7 125.6Z"/><path class="l2" d="M200.9 119.6L114.3 169.6L114.3 175.6L200.9 125.6Z"/><path class="l2" d="M114.3 69.6L200.9 119.6L114.3 169.6L27.7 119.6Z"/><path class="l" d="M27.7 110L114.3 160L114.3 166L27.7 116Z"/><path class="l" d="M200.9 110L114.3 160L114.3 166L200.9 116Z"/><path class="l" d="M114.3 60L200.9 110L114.3 160L27.7 110Z"/><path class="g" d="M-152.4 93L-123 110L-152.4 127L-181.9 110Z"/><path class="g" d="M-152.4 59L-123 76L-152.4 93L-181.9 76Z"/><path class="g" d="M-152.4 93L-152.4 59"/><path class="g" d="M-123 110L-123 76"/><path class="g" d="M-152.4 127L-152.4 93"/><path class="g" d="M-181.9 110L-181.9 76"/><ellipse class="g" cx="152.4" cy="110" rx="20.8" ry="12"/><ellipse class="g" cx="152.4" cy="80" rx="20.8" ry="12"/><path class="g" d="M131.6 80L131.6 110M173.2 80L173.2 110"/><path class="l3" d="M-72.7 175.2L0 217.2L0 223.2L-72.7 181.2Z"/><path class="l3" d="M72.7 175.2L0 217.2L0 223.2L72.7 181.2Z"/><path class="l3" d="M0 133.2L72.7 175.2L0 217.2L-72.7 175.2Z"/><path class="l2" d="M-72.7 165.6L0 207.6L0 213.6L-72.7 171.6Z"/><path class="l2" d="M72.7 165.6L0 207.6L0 213.6L72.7 171.6Z"/><path class="l2" d="M0 123.6L72.7 165.6L0 207.6L-72.7 165.6Z"/><path class="l" d="M-72.7 156L0 198L0 204L-72.7 162Z"/><path class="l" d="M72.7 156L0 198L0 204L72.7 162Z"/><path class="l" d="M0 114L72.7 156L0 198L-72.7 156Z"/><path class="l" d="M-56.3 125.5L-30.3 140.5L-30.3 170.5L-56.3 155.5Z"/><path class="l" d="M-4.3 125.5L-30.3 140.5L-30.3 170.5L-4.3 155.5Z"/><path class="l" d="M-30.3 110.5L-4.3 125.5L-30.3 140.5L-56.3 125.5Z"/><path class="l" d="M12.8 150.4L12.8 156A18.4 10.6 0 0 0 49.5 156L49.5 150.4Z"/><ellipse class="l" cx="31.2" cy="150.4" rx="18.4" ry="10.6"/><path class="l" d="M12.8 144.8L12.8 150.4A18.4 10.6 0 0 0 49.5 150.4L49.5 144.8Z"/><ellipse class="l" cx="31.2" cy="144.8" rx="18.4" ry="10.6"/><path class="l" d="M12.8 139.2L12.8 144.8A18.4 10.6 0 0 0 49.5 144.8L49.5 139.2Z"/><ellipse class="l" cx="31.2" cy="139.2" rx="18.4" ry="10.6"/><path class="l" d="M12.8 133.6L12.8 139.2A18.4 10.6 0 0 0 49.5 139.2L49.5 133.6Z"/><ellipse class="l" cx="31.2" cy="133.6" rx="18.4" ry="10.6"/><path class="l" d="M12.8 128L12.8 133.6A18.4 10.6 0 0 0 49.5 133.6L49.5 128Z"/><ellipse class="l" cx="31.2" cy="128" rx="18.4" ry="10.6"/><path class="g" d="M0 117L67.5 156L0 195L-67.5 156Z"/><path class="g" d="M0 73L67.5 112L0 151L-67.5 112Z"/><path class="g" d="M0 117L0 73"/><path class="g" d="M67.5 156L67.5 112"/><path class="g" d="M0 195L0 151"/><path class="g" d="M-67.5 156L-67.5 112"/></svg>
+          <figcaption>
+            <h3>Or lock both and settle once</h3>
+            <p>Eskari holds both legs. They move together in one transaction, or neither moves at all.</p>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="wrap">
+      <div class="head">
+        <h2>Lock both legs.<br />Settle once.</h2>
+        <div class="head-r">
+          <p class="lead">Both agents commit to the same terms and each leg is locked in escrow. When the conditions hold, both legs settle in a single atomic transaction. When they don't, both unwind.</p>
+          <p class="head-note">Step through it below, then switch to the path where a condition fails.</p>
+        </div>
+      </div>
+
+      <div class="how" id="demo" data-step="3" data-path="settle">
+        <div class="demo">
+          <div class="demo-bar">
+            <div class="demo-id">
+              <span class="demo-st" aria-hidden="true">
+                <svg class="s-open" width="14" height="14"><use href="#st-await"/></svg>
+                <svg class="s-locked" width="14" height="14"><use href="#st-locked"/></svg>
+                <svg class="s-verify" width="14" height="14"><use href="#st-verify"/></svg>
+                <svg class="s-settled" width="14" height="14"><use href="#st-settled"/></svg>
+                <svg class="s-unwound" width="14" height="14"><use href="#st-unwound"/></svg>
+              </span>
+              <span class="mono id">ESC-2047</span>
+              <span class="demo-title">GPU-hours for USDC</span>
+            </div>
+            <div class="demo-ctl">
+              <div class="seg" role="group" aria-label="Choose the outcome to simulate">
+                <button type="button" class="seg-btn is-on" data-path="settle" aria-pressed="true">Conditions met</button>
+                <button type="button" class="seg-btn" data-path="unwind" aria-pressed="false">Condition fails</button>
+              </div>
+              <button type="button" class="replay" id="demoReplay"><svg class="ic" width="14" height="14" aria-hidden="true"><use href="#i-replay"/></svg><span>Replay</span></button>
+            </div>
+          </div>
+
+          <div class="demo-main">
+            <div class="demo-stage">
+              <div class="cols">
+                <div class="col">
+                  <span class="col-role">Buyer</span>
+                  <span class="col-name"><i class="av av-a" aria-hidden="true">P</i>procure-01</span>
+                  <span class="col-org">Acme Robotics</span>
+                </div>
+                <div class="col col-mid">
+                  <span class="col-role">Escrow</span>
+                  <span class="col-name"><svg class="logo-mark" width="14" height="14" aria-hidden="true"><use href="#mark"/></svg>Eskari</span>
+                  <span class="col-org">Contract on Canton</span>
+                </div>
+                <div class="col col-end">
+                  <span class="col-role">Seller</span>
+                  <span class="col-name"><i class="av av-b" aria-hidden="true">B</i>broker-07</span>
+                  <span class="col-org">Northfield Compute</span>
+                </div>
+              </div>
+
+              <div class="lanes">
+                <div class="vault" aria-hidden="true"><span class="vault-tag"><svg class="ic" width="12" height="12"><use href="#i-lock"/></svg></span></div>
+
+                <div class="lane lane-pay">
+                  <div class="lane-h"><span>Payment leg</span><span class="lane-state" id="payState">Released<i> to seller</i></span></div>
+                  <div class="track">
+                    <i class="slot"></i><i class="slot"></i><i class="slot"></i>
+                    <div class="chip chip-pay"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-coin"/></svg><span><b>25,000</b> USDC</span></div>
+                  </div>
+                </div>
+
+                <div class="lane lane-asset">
+                  <div class="lane-h"><span>Asset leg</span><span class="lane-state" id="assetState">Released<i> to buyer</i></span></div>
+                  <div class="track">
+                    <i class="slot"></i><i class="slot"></i><i class="slot"></i>
+                    <div class="chip chip-asset"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-cube"/></svg><span><b>2,000</b> GPU-hours</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="outcome" id="demoOutcome" role="status" aria-live="polite">Settled. Both legs moved in one transaction.</p>
+            </div>
+
+            <div class="demo-side">
+              <div class="side-block">
+                <div class="side-title">Conditions</div>
+                <ul class="checks">
+                  <li data-at="0"><i class="ck" aria-hidden="true"></i>Terms signed by both agents</li>
+                  <li data-at="1"><i class="ck" aria-hidden="true"></i>Payment leg locked</li>
+                  <li data-at="1"><i class="ck" aria-hidden="true"></i>Asset leg locked</li>
+                  <li data-at="2" class="ck-var"><i class="ck" aria-hidden="true"></i><span class="on-settle">Capacity attested before deadline</span><span class="on-unwind">Capacity not attested by 14:32 UTC</span></li>
+                </ul>
+              </div>
+              <div class="side-block">
+                <div class="side-title">Events</div>
+                <ol class="log" id="demoLog">
+                  <li data-at="0"><time>14:17:03</time><span><b>escrow.opened</b> <i>terms a41f…c9e2</i></span></li>
+                  <li data-at="1"><time>14:17:05</time><span><b>leg.locked</b> <i>payment · 25,000.00 USDC</i></span></li>
+                  <li data-at="1"><time>14:17:06</time><span><b>leg.locked</b> <i>asset · 2,000 GPU-hours</i></span></li>
+                  <li data-at="2" data-on="settle"><time>14:17:41</time><span><b>conditions.met</b> <i>capacity.attested</i></span></li>
+                  <li data-at="3" data-on="settle" class="ok"><time>14:17:41</time><span><b>escrow.settled</b> <i>2 legs · 1 transaction</i></span></li>
+                  <li data-at="2" data-on="unwind" hidden><time>14:32:00</time><span><b>conditions.failed</b> <i>deadline reached</i></span></li>
+                  <li data-at="3" data-on="unwind" class="bad" hidden><time>14:32:00</time><span><b>escrow.unwound</b> <i>2 legs · 1 transaction</i></span></li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ol class="steps" aria-label="Settlement steps">
+          <li>
+            <button type="button" class="step" data-step="0">
+              <span class="step-dot" aria-hidden="true"></span>
+              <span class="step-n">01</span>
+              <span class="step-t">Agree terms</span>
+              <span class="step-d">Both agents sign the same terms: what moves, what must be true, and by when.</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="step" data-step="1">
+              <span class="step-dot" aria-hidden="true"></span>
+              <span class="step-n">02</span>
+              <span class="step-t">Lock both legs</span>
+              <span class="step-d">The payment and the asset each move into escrow. Neither side can pull out alone.</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="step" data-step="2">
+              <span class="step-dot" aria-hidden="true"></span>
+              <span class="step-n">03</span>
+              <span class="step-t">Verify conditions</span>
+              <span class="step-d">The contract checks what both sides agreed to. Nothing is released on a promise.</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="step" data-step="3">
+              <span class="step-dot" aria-hidden="true"></span>
+              <span class="step-n">04</span>
+              <span class="step-t"><span class="on-settle">Settle atomically</span><span class="on-unwind">Unwind atomically</span></span>
+              <span class="step-d"><span class="on-settle">Both legs are released in one transaction. Payment and asset arrive together.</span><span class="on-unwind">Both legs go back where they came from, in one transaction. Nobody is left exposed.</span></span>
+            </button>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCT -->
+  <section class="section" id="product">
+    <div class="wrap">
+      <div class="head">
+        <h2>Every deal,<br />both legs</h2>
+        <div class="head-r">
+          <p class="lead">A console for the people behind the agents. See what is locked, what settled and what unwound, with the reason attached to every outcome.</p>
+        </div>
+      </div>
+
+      <div class="console" role="img" aria-label="Eskari console: a list of settlements grouped by status, with a detail panel for an escrow that unwound because a condition was not met before its deadline.">
+        <div class="list">
+          <div class="list-bar">
+            <span class="list-title"><svg class="ic" width="16" height="16"><use href="#i-swap"/></svg>Settlements</span>
+            <span class="list-filters"><span class="filter">All agents</span><span class="filter">Last 24 hours</span></span>
+          </div>
+
+          <div class="grp"><span class="tri">▾</span><svg width="14" height="14"><use href="#st-locked"/></svg><b>Locked</b><i>2</i></div>
+          <div class="row"><span class="mono id">ESC-2052</span><svg width="14" height="14"><use href="#st-locked"/></svg><span class="row-t">Market data licence, 30 days</span><span class="row-cp">helio-data</span><span class="row-amt">4,200.00 USDC</span><time>2m</time></div>
+          <div class="row"><span class="mono id">ESC-2050</span><svg width="14" height="14"><use href="#st-verify"/></svg><span class="row-t">Invoice INV-0118</span><span class="row-cp">parts-desk</span><span class="row-amt">18,640.00 USDC</span><time>9m</time></div>
+
+          <div class="grp"><span class="tri">▾</span><svg width="14" height="14"><use href="#st-settled"/></svg><b>Settled</b><i>4</i></div>
+          <div class="row"><span class="mono id">ESC-2047</span><svg width="14" height="14"><use href="#st-settled"/></svg><span class="row-t">2,000 GPU-hours</span><span class="row-cp">broker-07</span><span class="row-amt">25,000.00 USDC</span><time>14:17</time></div>
+          <div class="row"><span class="mono id">ESC-2046</span><svg width="14" height="14"><use href="#st-settled"/></svg><span class="row-t">Tokenized T-bill, 50 units</span><span class="row-cp">treasury-03</span><span class="row-amt">49,870.00 USDC</span><time>13:58</time></div>
+          <div class="row"><span class="mono id">ESC-2043</span><svg width="14" height="14"><use href="#st-settled"/></svg><span class="row-t">Route dataset, EU coverage</span><span class="row-cp">mapworks-2</span><span class="row-amt">1,150.00 USDC</span><time>13:20</time></div>
+          <div class="row"><span class="mono id">ESC-2041</span><svg width="14" height="14"><use href="#st-settled"/></svg><span class="row-t">400 GPU-hours</span><span class="row-cp">broker-07</span><span class="row-amt">5,000.00 USDC</span><time>12:44</time></div>
+
+          <div class="grp"><span class="tri">▾</span><svg width="14" height="14"><use href="#st-unwound"/></svg><b>Unwound</b><i>1</i></div>
+          <div class="row on"><span class="mono id">ESC-2044</span><svg width="14" height="14"><use href="#st-unwound"/></svg><span class="row-t">Inference credits, 1M tokens</span><span class="row-cp">modelhub-2</span><span class="row-amt">900.00 USDC</span><time>13:31</time></div>
+
+          <div class="grp"><span class="tri">▾</span><svg width="14" height="14"><use href="#st-await"/></svg><b>Awaiting lock</b><i>1</i></div>
+          <div class="row"><span class="mono id">ESC-2053</span><svg width="14" height="14"><use href="#st-await"/></svg><span class="row-t">Storage credits, 12 TB-months</span><span class="row-cp">coldline-5</span><span class="row-amt">2,304.00 USDC</span><time>now</time></div>
+        </div>
+
+        <div class="detail">
+          <div class="detail-bar">
+            <span><svg width="14" height="14"><use href="#st-unwound"/></svg><span class="mono id">ESC-2044</span><b>Unwound</b></span>
+            <svg class="ic" width="16" height="16"><use href="#i-x"/></svg>
+          </div>
+          <div class="detail-body">
+            <div class="doc-title">Inference credits for USDC</div>
+            <div class="reason">
+              <span class="reason-h">Condition failed</span>
+              <span><code>credits.issued</code> was not attested before the 13:31 UTC deadline.</span>
+            </div>
+            <div class="ret">
+              <div><svg class="ic" width="16" height="16"><use href="#i-coin"/></svg><span><b>900.00 USDC</b> returned to procure-01</span></div>
+              <div><svg class="ic" width="16" height="16"><use href="#i-cube"/></svg><span><b>1M inference credits</b> returned to modelhub-2</span></div>
+            </div>
+            <ol class="tl">
+              <li><time>13:16:00</time><span>Escrow opened, terms signed</span></li>
+              <li><time>13:16:04</time><span>Both legs locked</span></li>
+              <li class="bad"><time>13:31:00</time><span>Deadline reached, condition not met</span></li>
+              <li class="bad"><time>13:31:00</time><span>Both legs returned in one transaction</span></li>
+            </ol>
+            <p class="detail-foot">Nothing changed hands. Nothing to chase.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="feat">
+        <p class="feat-label">In the console</p>
+        <dl class="feat-list">
+          <div><dt>Both legs, side by side</dt><dd>Payment and asset on one screen, with who locked what and when.</dd></div>
+          <div><dt>Reasons, not just states</dt><dd>Every unwind names the condition that failed and the moment it failed.</dd></div>
+          <div><dt>Deadlines on every escrow</dt><dd>No leg stays locked forever. Each escrow settles or unwinds by a set time.</dd></div>
+          <div><dt>Limits per agent</dt><dd>Decide which agents can open escrows, with whom, and up to what size.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="head">
+        <h2>Two parties<br />see the deal</h2>
+        <div class="head-r">
+          <p class="lead">Eskari runs on Canton, where a contract is shared only with its stakeholders. Your price, your counterparty and your terms stay between the two of you, plus anyone you both choose to add.</p>
+          <p class="head-note">Pick a participant to see the deal through their eyes.</p>
+        </div>
+      </div>
+
+      <div class="vis" id="vis" data-view="buyer">
+        <div class="vis-who">
+          <div class="vis-h">On the network</div>
+          <div class="who-list" role="group" aria-label="View the deal as">
+            <button type="button" class="who is-on" data-view="buyer" aria-pressed="true">
+              <i class="av av-a" aria-hidden="true">P</i>
+              <span class="who-main"><b>procure-01</b><span>Acme Robotics</span></span>
+              <span class="who-tag t-in">Buyer</span>
+            </button>
+            <button type="button" class="who" data-view="seller" aria-pressed="false">
+              <i class="av av-b" aria-hidden="true">B</i>
+              <span class="who-main"><b>broker-07</b><span>Northfield Compute</span></span>
+              <span class="who-tag t-in">Seller</span>
+            </button>
+            <button type="button" class="who" data-view="auditor" aria-pressed="false">
+              <i class="av av-c" aria-hidden="true">A</i>
+              <span class="who-main"><b>audit-desk</b><span>Invited by both parties</span></span>
+              <span class="who-tag t-obs">Observer</span>
+            </button>
+            <button type="button" class="who" data-view="other" aria-pressed="false">
+              <i class="av av-d" aria-hidden="true">R</i>
+              <span class="who-main"><b>rival-buyer-12</b><span>Another company's agent</span></span>
+              <span class="who-tag t-out">Not a party</span>
+            </button>
+            <button type="button" class="who" data-view="node" aria-pressed="false">
+              <i class="av av-d" aria-hidden="true">V</i>
+              <span class="who-main"><b>validator-eu-4</b><span>Unrelated network node</span></span>
+              <span class="who-tag t-out">Not a party</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="vis-view" aria-live="polite">
+          <div class="view-bar">
+            <span class="view-as"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-eye"/></svg>Ledger as seen by <b id="viewName">procure-01</b></span>
+            <span class="view-count" id="viewCount">1 contract</span>
+          </div>
+
+          <div class="view-deal">
+            <div class="view-head">
+              <span><svg width="14" height="14" aria-hidden="true"><use href="#st-settled"/></svg><span class="mono id">ESC-2047</span></span>
+              <span class="view-role" id="viewRole">Stakeholder · can act</span>
+            </div>
+            <dl class="fields">
+              <div><dt>Buyer</dt><dd>procure-01 · Acme Robotics</dd></div>
+              <div><dt>Seller</dt><dd>broker-07 · Northfield Compute</dd></div>
+              <div><dt>Payment leg</dt><dd>25,000.00 USDC</dd></div>
+              <div><dt>Asset leg</dt><dd>2,000 GPU-hours</dd></div>
+              <div><dt>Settles when</dt><dd><code>capacity.attested</code> by 14:32 UTC</dd></div>
+              <div><dt>Outcome</dt><dd>Settled at 14:17:41</dd></div>
+            </dl>
+          </div>
+
+          <div class="view-empty" hidden>
+            <div class="ghost" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="empty-msg">
+              <svg class="ic" width="20" height="20" aria-hidden="true"><use href="#i-eye-off"/></svg>
+              <b>Nothing to show</b>
+              <p>This participant is not a stakeholder, so the contract is never sent to it. Not the price, not the parties, not the fact that a deal happened.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trio">
+        <div><span class="trio-k">Counterparties</span><b>Always</b><p>The buyer and the seller see every field. They are the deal.</p></div>
+        <div><span class="trio-k">Observers</span><b>Only by invitation</b><p>An auditor or a finance team can read along if both sides add them.</p></div>
+        <div><span class="trio-k">Everyone else</span><b>Never</b><p>Other agents, other companies and unrelated nodes receive nothing.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEVELOPERS -->
+  <section class="section" id="developers">
+    <div class="wrap">
+      <div class="head">
+        <h2>One call opens<br />an escrow</h2>
+        <div class="head-r">
+          <p class="lead">Give your agent a way to trade with counterparties it has never met. Open, lock, wait for the result. Eskari reports one outcome for both legs.</p>
+        </div>
+      </div>
+
+      <div class="dev">
+        <div class="code" role="region" aria-label="Code sample: opening and settling an escrow with the Eskari SDK" tabindex="0">
+          <div class="code-bar">
+            <span class="code-file"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-file"/></svg><span class="mono">agents/procure/settle.ts</span></span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+<pre><code><span class="ln"><span class="k">import</span> Eskari <span class="k">from</span> <span class="s">"@eskari/sdk"</span>;</span>
+<span class="ln"></span>
+<span class="ln"><span class="k">const</span> eskari = <span class="k">new</span> <span class="t">Eskari</span>({</span>
+<span class="ln">  apiKey: process.env.<span class="v">ESKARI_KEY</span>,</span>
+<span class="ln">});</span>
+<span class="ln"></span>
+<span class="ln"><span class="c">// Both agents sign the same terms.</span></span>
+<span class="ln"><span class="k">const</span> escrow = <span class="k">await</span> eskari.<span class="f">open</span>({</span>
+<span class="ln">  buyer: <span class="s">"procure-01@acme"</span>,</span>
+<span class="ln">  seller: <span class="s">"broker-07@northfield"</span>,</span>
+<span class="ln">  payment: {</span>
+<span class="ln">    asset: <span class="s">"USDC"</span>,</span>
+<span class="ln">    amount: <span class="s">"25000.00"</span>,</span>
+<span class="ln">  },</span>
+<span class="ln">  delivery: {</span>
+<span class="ln">    asset: <span class="s">"GPU-HOUR"</span>,</span>
+<span class="ln">    amount: <span class="s">"2000"</span>,</span>
+<span class="ln">  },</span>
+<span class="ln">  settleWhen: <span class="s">"capacity.attested"</span>,</span>
+<span class="ln">  unwindAfter: <span class="s">"15m"</span>,</span>
+<span class="ln">});</span>
+<span class="ln"></span>
+<span class="ln"><span class="c">// Lock this agent's leg.</span></span>
+<span class="ln"><span class="k">await</span> escrow.<span class="f">lock</span>();</span>
+<span class="ln"></span>
+<span class="ln"><span class="c">// One outcome for both legs.</span></span>
+<span class="ln"><span class="k">const</span> result = <span class="k">await</span> escrow.<span class="f">done</span>();</span>
+<span class="ln"><span class="c">// "settled" | "unwound"</span></span></code></pre>
+        </div>
+
+        <div class="hooks" role="img" aria-label="Webhook events delivered for escrow ESC-2047, from opened to settled, with the payload of the final event.">
+          <div class="hooks-bar"><span><svg class="ic" width="16" height="16"><use href="#i-bolt"/></svg>Webhook deliveries</span><span class="mono">ESC-2047</span></div>
+          <div class="hooks-body">
+            <div class="hooks-list">
+              <div class="hook"><span class="code-ok">200</span><span class="hook-e">escrow.opened</span><span class="hook-ms">41 ms</span><time>14:17:03<i>.118</i></time></div>
+              <div class="hook"><span class="code-ok">200</span><span class="hook-e">leg.locked <i>payment</i></span><span class="hook-ms">38 ms</span><time>14:17:05<i>.402</i></time></div>
+              <div class="hook"><span class="code-ok">200</span><span class="hook-e">leg.locked <i>asset</i></span><span class="hook-ms">36 ms</span><time>14:17:06<i>.077</i></time></div>
+              <div class="hook"><span class="code-ok">200</span><span class="hook-e">conditions.met</span><span class="hook-ms">44 ms</span><time>14:17:41<i>.530</i></time></div>
+              <div class="hook on"><span class="code-ok">200</span><span class="hook-e">escrow.settled</span><span class="hook-ms">39 ms</span><time>14:17:41<i>.530</i></time></div>
+            </div>
+            <pre class="payload" aria-hidden="true"><span class="p">{</span>
+  <span class="k">"type"</span>: <span class="s">"escrow.settled"</span>,
+  <span class="k">"escrow"</span>: <span class="s">"ESC-2047"</span>,
+  <span class="k">"legs"</span>: [
+    {
+      <span class="k">"kind"</span>: <span class="s">"payment"</span>,
+      <span class="k">"state"</span>: <span class="s">"released"</span>,
+      <span class="k">"to"</span>: <span class="s">"broker-07"</span>
+    },
+    {
+      <span class="k">"kind"</span>: <span class="s">"asset"</span>,
+      <span class="k">"state"</span>: <span class="s">"released"</span>,
+      <span class="k">"to"</span>: <span class="s">"procure-01"</span>
+    }
+  ],
+  <span class="k">"transactions"</span>: <span class="n">1</span>,
+  <span class="k">"at"</span>: <span class="s">"14:17:41.530Z"</span>
+<span class="p">}</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="feat">
+        <p class="feat-label">For developers <span>The SDK is in development. The API shown is illustrative and may change.</span></p>
+        <dl class="feat-list">
+          <div><dt>One result, not two</dt><dd>Your agent never has to reconcile a payment that went through with a delivery that didn't.</dd></div>
+          <div><dt>Conditions as data</dt><dd>State what must be true before release. The escrow checks it, not the counterparty.</dd></div>
+          <div><dt>Events for every change</dt><dd>Opened, locked, verified, settled or unwound. Each one arrives as a webhook.</dd></div>
+          <div><dt>No ledger code</dt><dd>Your agent calls an API. The contracts underneath are ours to maintain.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT SETTLES -->
+  <section class="section" id="assets">
+    <div class="wrap">
+      <div class="head">
+        <h2>What agents<br />can settle</h2>
+        <div class="head-r">
+          <p class="lead">A stablecoin payment on one side. On the other, whatever the two agents agreed to trade. These are the pairs we are building for first.</p>
+        </div>
+      </div>
+
+      <div class="pairs" role="table" aria-label="Settlement pairs">
+        <div class="pair pair-h" role="row">
+          <span role="columnheader"></span>
+          <span role="columnheader">Asset leg</span>
+          <span role="columnheader">Example deal</span>
+          <span role="columnheader">Releases when</span>
+        </div>
+        <div class="pair" role="row">
+          <span class="pair-n" role="cell">01</span>
+          <span class="pair-a" role="cell"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-cube"/></svg><b>Tokenized assets</b><i>Fund units, bills, on-ledger securities</i></span>
+          <span class="pair-p" role="cell">50 T-bill units for 49,870 USDC</span>
+          <span class="pair-c" role="cell">Both legs are locked and the terms match</span>
+        </div>
+        <div class="pair" role="row">
+          <span class="pair-n" role="cell">02</span>
+          <span class="pair-a" role="cell"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-file"/></svg><b>Data licences</b><i>Datasets, feeds, usage rights</i></span>
+          <span class="pair-p" role="cell">30-day market data feed for 4,200 USDC</span>
+          <span class="pair-c" role="cell">The licence grant is issued to the buyer</span>
+        </div>
+        <div class="pair" role="row">
+          <span class="pair-n" role="cell">03</span>
+          <span class="pair-a" role="cell"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-agent"/></svg><b>Compute credits</b><i>GPU-hours, inference, storage</i></span>
+          <span class="pair-p" role="cell">2,000 GPU-hours for 25,000 USDC</span>
+          <span class="pair-c" role="cell">The provider attests the capacity is reserved</span>
+        </div>
+        <div class="pair" role="row">
+          <span class="pair-n" role="cell">04</span>
+          <span class="pair-a" role="cell"><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-inbox"/></svg><b>Invoices</b><i>Agent-to-agent payables</i></span>
+          <span class="pair-p" role="cell">Invoice INV-0118 for 18,640 USDC</span>
+          <span class="pair-c" role="cell">The invoice is marked discharged in the same step</span>
+        </div>
+      </div>
+      <p class="pairs-note">Trading something else? Tell us when you request access.</p>
+    </div>
+  </section>
+
+  <!-- CANTON -->
+  <section class="section canton" id="canton">
+    <div class="wrap">
+      <div class="cards">
+        <article class="card card-a">
+          <p class="card-q">All legs or none is a property of the ledger, not a promise from us.</p>
+          <div class="card-f">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.500" aria-hidden="true"><rect x="3.500" y="5" width="9" height="18" rx="2"/><rect x="15.500" y="5" width="9" height="18" rx="2"/><path d="M8 14h12" stroke-dasharray="1.500 2.500"/></svg>
+            <span><b>Atomic transactions</b><i>Every leg of a Canton transaction commits together, or none do.</i></span>
+          </div>
+        </article>
+        <article class="card card-b">
+          <p class="card-q">Only the parties to a contract ever receive it.</p>
+          <div class="card-f">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.500" aria-hidden="true"><circle cx="10" cy="14" r="6.500"/><circle cx="18" cy="14" r="6.500"/></svg>
+            <span><b>Privacy by default</b><i>Data goes to stakeholders only.</i></span>
+          </div>
+        </article>
+      </div>
+      <div class="cards-foot">
+        <p>Eskari is built on the <b>Canton Network</b>, a public ledger with privacy designed for finance.</p>
+        <a class="link-arrow" href="https://www.canton.network/" target="_blank" rel="noopener">About Canton <svg width="16" height="16" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="wrap faq">
+      <h2>Questions</h2>
+      <div class="faq-list">
+        <details open>
+          <summary><span>What does “atomic” mean here?</span><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>The payment and the asset move in the same transaction. Either both legs complete or neither does. There is no moment where one side has paid and the other has not delivered.</p>
+        </details>
+        <details>
+          <summary><span>What happens if a condition is not met?</span><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Both legs unwind. The payment returns to the buyer and the asset returns to the seller, in one transaction. Every escrow carries a deadline, so nothing stays locked indefinitely.</p>
+        </details>
+        <details>
+          <summary><span>Who can see a deal?</span><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>The buyer, the seller, and anyone they both add as an observer, such as an auditor. Canton shares a contract only with its stakeholders. Other participants on the network never receive it.</p>
+        </details>
+        <details>
+          <summary><span>What does Eskari itself see?</span><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>What the escrow needs to hold and release the two legs: the parties, the legs, the conditions and the deadline. Eskari is a party to the escrow contract. It is not a party to the rest of your agents' business.</p>
+        </details>
+        <details>
+          <summary><span>How do agents integrate?</span><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Through an API and SDK. An agent opens an escrow, locks its leg and waits for a single result. You set limits on which agents can open escrows, with whom, and for how much.</p>
+        </details>
+        <details>
+          <summary><span>What can be settled?</span><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>We are starting with stablecoin payments against tokenized assets, data licences, compute credits and invoices. If your agents trade something else, tell us when you request access.</p>
+        </details>
+        <details>
+          <summary><span>Is Eskari live?</span><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Not yet. Eskari is pre-launch. The screens and figures on this page are illustrative. Request access and we will reach out as we open up.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="access">
+    <div class="wrap">
+      <h2>Neither side<br />goes first.</h2>
+      <p class="cta-sub">Eskari is pre-launch. Leave a work email and we will reach out as access opens.</p>
+      <form class="cta-form" id="accessForm" novalidate>
+        <label for="accessEmail" class="sr-only">Work email</label>
+        <input id="accessEmail" name="email" type="email" placeholder="you@company.com" autocomplete="email" required />
+        <button class="btn btn-light btn-lg" type="submit">Request access</button>
+        <p class="form-err" id="accessErr" role="alert" hidden>Enter a valid work email.</p>
+      </form>
+      <p class="thanks" id="accessThanks" role="status" tabindex="-1" hidden><svg width="16" height="16" aria-hidden="true"><use href="#st-settled"/></svg>Thanks. You're on the list, and we'll be in touch.</p>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <a href="#top" class="footer-mark" aria-label="Eskari home"><svg class="logo-mark" width="24" height="24" aria-hidden="true"><use href="#mark"/></svg></a>
+      <nav class="footer-cols" aria-label="Footer">
+        <div>
+          <h3>Product</h3>
+          <a href="#how">How it works</a>
+          <a href="#product">Console</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#assets">What settles</a>
+        </div>
+        <div>
+          <h3>Developers</h3>
+          <a href="#developers">SDK preview</a>
+          <a href="#developers">Webhooks</a>
+          <a href="#canton">Built on Canton</a>
+        </div>
+        <div>
+          <h3>Company</h3>
+          <a href="#problem">Why Eskari</a>
+          <a href="#faq">FAQ</a>
+          <a href="#access">Request access</a>
+        </div>
+      </nav>
+      <div class="footer-legal">
+        <span>© 2026 Eskari</span>
+        <span>Product screens and figures on this page are illustrative.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
